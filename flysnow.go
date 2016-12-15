@@ -96,6 +96,16 @@ func (f *FlySnowConn) Send(tag string, data interface{}) (result *Resp, err erro
 	return f.Reader()
 }
 
+//Ping
+func (f *FlySnowConn) Ping() (err error) {
+	_, err = f.sender(nil, 1, 1, "")
+	if err != nil {
+		return err
+	}
+	_, err = f.Reader()
+	return err
+}
+
 //统计查询
 func (f *FlySnowConn) Stat(tag string, query *StatQuery) (result *Resp, err error) {
 	_, err = f.sender(query, 1, 1, tag)
