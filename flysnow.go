@@ -18,6 +18,7 @@ var errmap = map[int]error{
 	1001: errors.New("op error"),
 	0:    nil,
 }
+var TimeOut time.Duration
 
 func transerr(code int) error {
 	if v, ok := errmap[code]; ok {
@@ -53,24 +54,24 @@ type StatQuery struct {
 	STime, ETime int64
 	Group        []string
 	Limit, Skip  int
-	sort         []interface{}
-	span         int64
-	spand        string
+	Sort         []interface{}
+	Span         int64
+	Spand        string
 }
 
 func NewStatQuery() *StatQuery {
 	return &StatQuery{}
 }
 func (sq *StatQuery) SetSort(key string, asc bool) {
-	sq.sort = []interface{}{key, asc}
+	sq.Sort = []interface{}{key, asc}
 }
 
 //d=[s,h,d,m,y]
 func (sq *StatQuery) SetSpan(t int64, d string) {
 	switch d {
 	case "s", "d", "h", "m", "y":
-		sq.spand = d
-		sq.span = t
+		sq.Spand = d
+		sq.Span = t
 	default:
 	}
 }
@@ -98,7 +99,7 @@ func (f *FlySnowConn) Send(tag string, data interface{}) (result *Resp, err erro
 
 //Ping
 func (f *FlySnowConn) Ping() (err error) {
-	_, err = f.sender(nil, 1, 1, "")
+	_, err = f.sender(nil, 0, 1, "")
 	if err != nil {
 		return err
 	}
@@ -118,6 +119,9 @@ func (f *FlySnowConn) Stat(tag string, query *StatQuery) (result *Resp, err erro
 //读取返回数据
 func (f *FlySnowConn) Reader() (result *Resp, err error) {
 	tmpBuffer := make([]byte, 0)
+	if TimeOut != 0 {
+		f.conn.SetReadDeadline(time.Now().Add(TimeOut))
+	}
 	for {
 		i, err := f.conn.Read(f.b)
 		if err != nil {
@@ -131,6 +135,9 @@ func (f *FlySnowConn) Reader() (result *Resp, err error) {
 }
 
 func (f *FlySnowConn) sender(data interface{}, op, resp int, tag string) (int, error) {
+	if TimeOut != 0 {
+		f.conn.SetWriteDeadline(time.Now().Add(TimeOut))
+	}
 	return f.conn.Write(f.Packet(JsonEncode(data), op, resp, tag))
 }
 func JsonEncode(data interface{}) []byte {
@@ -223,7 +230,7 @@ type FlySnowPool struct {
 	// the application. Argument t is the time that the connection was returned
 	// to the pool. If the function returns an error, then the connection is
 	// closed.
-	TestOnBorrow func(c *FlySnowConn, t time.Time) error
+	TestOnBorrow func(c *FlySnowConn) error
 
 	// Maximum number of idle connections in the pool.
 	MaxIdle int
@@ -335,7 +342,7 @@ func (p *FlySnowPool) get() (*FlySnowConn, error) {
 			p.idle.Remove(e)
 			test := p.TestOnBorrow
 			p.mu.Unlock()
-			if test == nil || test(ic, ic.t) == nil {
+			if test == nil || test(ic) == nil {
 				return ic, nil
 			}
 			ic.conn.Close()
