@@ -50,6 +50,7 @@ type FlySnowConn struct {
 }
 type StatQuery struct {
 	Term         string
+	DataQuery    map[string]interface{}
 	Index        map[string]interface{}
 	STime, ETime int64
 	Group        []string
