@@ -10,6 +10,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 var errmap = map[int]error{
@@ -58,6 +60,10 @@ type StatQuery struct {
 	Sort         []interface{}
 	Span         int64
 	Spand        string
+}
+type Clear struct {
+	TagTerms map[string][]string `json:"tag_terms"`
+	Query    bson.M              `json:"query"`
 }
 
 func NewStatQuery() *StatQuery {
@@ -111,6 +117,15 @@ func (f *FlySnowConn) Ping() (err error) {
 //统计查询
 func (f *FlySnowConn) Stat(tag string, query *StatQuery) (result *Resp, err error) {
 	_, err = f.sender(query, 1, 1, tag)
+	if err != nil {
+		return nil, err
+	}
+	return f.Reader()
+}
+
+//统计清理
+func (f *FlySnowConn) Clear(tag string, clear *Clear) (result *Resp, err error) {
+	_, err = f.sender(clear, 3, 1, tag)
 	if err != nil {
 		return nil, err
 	}
