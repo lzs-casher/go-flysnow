@@ -101,11 +101,6 @@ func (f *FlySnowConn) SendWithOutResp(tag string, data interface{}) error {
 	return err
 }
 
-//获取queue的数据包
-func (f *FlySnowConn) QueueData(tag string, data interface{}) interface{} {
-	return &Data{2, tag, JsonEncode(data)}
-}
-
 //正常发送
 func (f *FlySnowConn) Send(tag string, data interface{}) (result *Resp, err error) {
 	_, err = f.sender(data, 2, 1, tag)
@@ -432,4 +427,9 @@ func (p *FlySnowPool) put(c *FlySnowConn) error {
 	p.release()
 	p.mu.Unlock()
 	return c.conn.Close()
+}
+
+//获取queue的数据包
+func QueueData(tag string, data interface{}) interface{} {
+	return &Data{2, tag, JsonEncode(data)}
 }
