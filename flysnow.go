@@ -67,7 +67,7 @@ type Clear struct {
 }
 
 type Data struct {
-	Op   string
+	Op   int
 	Tag  string
 	Body []byte
 }
