@@ -66,6 +66,12 @@ type Clear struct {
 	Query    bson.M              `json:"query"`
 }
 
+type Data struct {
+	Op   string
+	Tag  string
+	Body []byte
+}
+
 func NewStatQuery() *StatQuery {
 	return &StatQuery{}
 }
@@ -93,6 +99,11 @@ func (f *FlySnowConn) Reconnection() (err error) {
 func (f *FlySnowConn) SendWithOutResp(tag string, data interface{}) error {
 	_, err := f.sender(data, 2, 0, tag)
 	return err
+}
+
+//获取queue的数据包
+func (f *FlySnowConn) QueueData(tag string, data interface{}) interface{} {
+	return &Data{2, tag, JsonEncode(data)}
 }
 
 //正常发送
