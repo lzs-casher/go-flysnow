@@ -64,6 +64,8 @@ type StatQuery struct {
 type Clear struct {
 	TagTerms map[string][]string `json:"tag_terms"`
 	Query    bson.M              `json:"query"`
+	STime    int64               `json:"s_time"`
+	ETime    int64               `json:"e_time"`
 }
 
 type Data struct {
