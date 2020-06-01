@@ -133,7 +133,16 @@ func (f *FlySnowConn) Stat(tag string, query *StatQuery) (result *Resp, err erro
 
 //统计清理
 func (f *FlySnowConn) Clear(tag string, clear *Clear) (result *Resp, err error) {
-	_, err = f.sender(clear, 3, 1, tag)
+	_, err = f.sender(clear, 3, 1, "")
+	if err != nil {
+		return nil, err
+	}
+	return f.Reader()
+}
+
+// 手动调用归档，当有自动归档进行时，返回错误
+func (f *FlySnowConn) Rotate() (result *Resp, err error) {
+	_, err = f.sender("", 4, 1, "")
 	if err != nil {
 		return nil, err
 	}
